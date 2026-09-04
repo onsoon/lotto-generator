@@ -4,9 +4,7 @@ import {
   Sparkles, 
   Dices, 
   RefreshCw, 
-  HelpCircle, 
   AlertCircle, 
-  CheckCircle2,
   TrendingUp,
   ShieldCheck
 } from 'lucide-react';
@@ -16,17 +14,19 @@ import NumberSelector from './components/NumberSelector';
 import StatsChart from './components/StatsChart';
 import GameList from './components/GameList';
 import { generateFiveLottoGames } from './utils/lottoGenerator';
+import { calculateLocalLottoStats } from './utils/defaultLottoData';
 
 /**
  * ============================================================================
  * [로또 5게임 생성기 메인 앱 컴포넌트 (App)]
  * 
  * - 기능:
- *   1. 백엔드 통계 API(/api/lotto-stats) 연동 및 최근 30회차 당첨 빈도수 수신
+ *   1. 백엔드 통계 API(/api/lotto-stats) 연동 (GitHub Pages 배포 환경에서는
+ *      내장된 공식 30회차 데이터셋으로 0초 만에 완벽 자동 Fallback)
  *   2. 사용자가 선택한 고정 번호(최대 5개)와 제외 번호(최대 10개) 상태 관리
  *   3. 가중치 랜덤 추첨 알고리즘 기반 5게임(A~E) 동시 생성
- *   4. 생성 시 재미와 생동감을 더하는 색종이 폭죽(confetti) 애니메이션
- *   5. Hot 번호 일괄 고정 / Cold 번호 일괄 제외 바로가기 기능
+ *   4. 생성 시 콘페티(폭죽) 애니메이션 효과
+ *   5. HOT 번호 일괄 고정 / COLD 번호 일괄 제외 바로가기 기능
  * ============================================================================
  */
 
@@ -58,17 +58,26 @@ export default function App() {
     setIsLoadingStats(true);
     setStatsError(null);
     try {
-      const response = await fetch('/api/lotto-stats?count=30');
-      const json = await response.json();
+      // 1. 백엔드 API 호출 시도
+      const response = await fetch('/api/lotto-stats?count=30', {
+        headers: { 'Accept': 'application/json' },
+      });
 
+      if (!response.ok) {
+        throw new Error(`API status ${response.status}`);
+      }
+
+      const json = await response.json();
       if (json.success && json.data) {
         setStatsData(json.data);
       } else {
-        throw new Error(json.message || '통계 데이터를 불러오지 못했습니다.');
+        throw new Error('API 응답 형식 오류');
       }
     } catch (err) {
-      console.error('통계 로딩 에러:', err);
-      setStatsError('동행복권 최신 통계를 불러오는 중 일시적인 지연이 발생했습니다. 기본 가중치로 생성할 수 있습니다.');
+      // 2. GitHub Pages 등 정적 호스팅 환경에서는 내장 공식 데이터셋으로 안전하게 자동 전환
+      console.log('정적 모드(내장 공식 로또 통계 데이터셋)로 동작합니다.');
+      const localData = calculateLocalLottoStats();
+      setStatsData(localData);
     } finally {
       setIsLoadingStats(false);
     }
@@ -91,7 +100,7 @@ export default function App() {
 
       setGeneratedGames(newGames);
 
-      // 기분 좋은 당첨 기원 콘페티(폭죽) 효과 실행
+      // 콘페티 폭죽 효과
       try {
         confetti({
           particleCount: 50,
@@ -124,7 +133,6 @@ export default function App() {
     if (!statsData?.hotNumbers) return;
     const hotList = statsData.hotNumbers.map((item) => item.number);
     setFixedNumbers(hotList.slice(0, 5));
-    // 혹시 제외 번호에 포함되어 있었다면 제외에서 제거
     setExcludedNumbers(excludedNumbers.filter((n) => !hotList.includes(n)));
   };
 
@@ -136,7 +144,6 @@ export default function App() {
     const coldList = statsData.coldNumbers.map((item) => item.number);
     const updatedExcluded = Array.from(new Set([...excludedNumbers, ...coldList])).slice(0, 10);
     setExcludedNumbers(updatedExcluded);
-    // 혹시 고정 번호에 포함되어 있었다면 고정에서 제거
     setFixedNumbers(fixedNumbers.filter((n) => !coldList.includes(n)));
   };
 
@@ -175,7 +182,6 @@ export default function App() {
 
       {/* 2. 메인 컨텐츠 영역 */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        {/* 통계 로딩 지연 알림 (필요 시) */}
         {statsError && (
           <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3 text-xs text-amber-800">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
