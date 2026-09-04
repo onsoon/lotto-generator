@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 입체 로또볼 하이라이트 효과 */
+.ball-shine {
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+/* 부드러운 스크롤 */
+html {
+  scroll-behavior: smooth;
+}

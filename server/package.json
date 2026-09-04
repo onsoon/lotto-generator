@@ -1,0 +1,15 @@
+{
+  "name": "lotto-backend",
+  "version": "1.0.0",
+  "description": "동행복권 최신 당첨 번호 통계 및 프록시 서버",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

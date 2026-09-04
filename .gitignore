@@ -1,0 +1,22 @@
+# 의존성 패키지 (용량이 매우 크므로 깃허브에 올리지 않습니다)
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# 빌드 산출물
+dist/
+client/dist/
+build/
+
+# 환경 변수 및 설정
+.env
+.env.local
+
+# 로그 및 임시 테스트 파일
+*.log
+.playwright-mcp/
+.system_generated/
+
+# 운영체제 임시 파일
+.DS_Store
+Thumbs.db
